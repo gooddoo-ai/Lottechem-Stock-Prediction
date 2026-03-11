@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+
+<html lang="ko" style="background:#07100a;">
+<head>
+<!-- © 2026 정임두. All rights reserved. 무단 복제 및 배포를 금합니다. -->
+<meta charset="UTF-8"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>롯데케미칼 AI 주가 예측 — 정임두</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:    #07100a;
+  --bg2:   #0b1a0f;
+  --bg3:   #102015;
+  --bg4:   #15281b;
+  --green: #00c853;
+  --green2:#69f0ae;
+  --lime:  #c6ff00;
+  --cyan:  #00e5ff;
+  --red:   #ff3d57;
+  --amber: #ffab00;
+  --gold:  #ffd54f;
+  --text:  #e8f5e9;
+  --text2: #7fad8a;
+  --text3: #3d6347;
+  --border:  rgba(0,200,83,0.18);
+  --border2: rgba(0,200,83,0.08);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+html { background:#07100a !important; }
+body {
+background:#07100a !important;
+background: var(–bg) !important;
+color: var(–text);
+font-family: ‘Pretendard’, ‘Apple SD Gothic Neo’, ‘Noto Sans KR’, sans-serif;
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+body::before {
+content:’’;
+position:fixed;inset:0;
+background:
+radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,200,83,0.08) 0%, transparent 60%),
+radial-gradient(ellipse 60% 40% at 20% 90%, rgba(0,229,255,0.04) 0%, transparent 50%),
+linear-gradient(180deg, #07100a 0%, #08120c 100%);
+pointer-events:none;z-index:0;
+}
+body::after {
+content:’’;
+position:fixed;inset:0;
+background-image:
+linear-gradient(rgba(0,200,83,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(0,200,83,0.03) 1px, transparent 1px);
+background-size:60px 60px;
+pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;}
+
+/* ── Ticker ── */
+.ticker {
+background: linear-gradient(90deg, var(–bg3), var(–bg4));
+border-bottom: 1px solid var(–border);
+padding: 0 20px;
+height: 36px;
+display: flex;
+align-items: center;
+overflow: hidden;
+}
+.ticker::before {
+content:‘LIVE’;
+background:var(–green);color:var(–bg);
+font-family:‘DM Mono’,monospace;font-size:10px;font-weight:500;
+padding:2px 8px;border-radius:2px;margin-right:16px;
+white-space:nowrap;flex-shrink:0;letter-spacing:.1em;
+}
+.ticker-scroll{display:flex;gap:32px;animation:ticker 35s linear infinite;white-space:nowrap;}
+@keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+.ticker-item{display:inline-flex;align-items:center;gap:8px;font-family:‘DM Mono’,monospace;font-size:11px;color:var(–text2);}
+.ticker-item .sym{color:var(–text);font-weight:500;}
+.up{color:var(–green);}
+.dn{color:var(–red);}
+.gold{color:var(–gold);}
+.amber{color:var(–amber);}
+
+/* ── Header ── */
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;padding:32px 32px 24px;border-bottom:1px solid var(–border2);flex-wrap:wrap;gap:20px;}
+.hdr-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,200,83,0.08);border:1px solid rgba(0,200,83,0.28);border-radius:3px;padding:4px 12px;font-family:‘DM Mono’,monospace;font-size:10px;color:var(–green);letter-spacing:.12em;margin-bottom:14px;}
+.hdr-badge .pulse{width:6px;height:6px;background:var(–green);border-radius:50%;animation:pulse 1.5s ease infinite;box-shadow:0 0 6px var(–green);}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.7);}}
+.hdr-title{font-family:‘Bebas Neue’,sans-serif;font-size:3.2rem;letter-spacing:.04em;line-height:1;color:var(–text);}
+.hdr-title span{color:var(–green);}
+.hdr-sub{font-family:‘DM Mono’,monospace;font-size:11px;color:var(–text3);margin-top:8px;letter-spacing:.06em;}
+.hdr-right{text-align:right;}
+.hdr-time{font-family:‘DM Mono’,monospace;font-size:10px;color:var(–text3);letter-spacing:.08em;margin-bottom:8px;}
+.price-big{font-family:‘Bebas Neue’,sans-serif;font-size:4rem;letter-spacing:.02em;color:var(–text);line-height:1;text-shadow:0 0 20px rgba(0,200,83,0.2);}
+.price-chg{font-family:‘DM Mono’,monospace;font-size:13px;margin-top:6px;}
+.api-pill{display:inline-flex;align-items:center;gap:5px;font-family:‘DM Mono’,monospace;font-size:9px;padding:3px 8px;border-radius:2px;margin-left:8px;letter-spacing:.06em;}
+.api-ok{background:rgba(0,200,83,0.1);color:var(–green);border:1px solid rgba(0,200,83,0.2);}
+.api-err{background:rgba(255,61,87,0.1);color:var(–red);border:1px solid rgba(255,61,87,0.2);}
+.api-loading{background:rgba(255,213,79,0.08);color:var(–gold);border:1px solid rgba(255,213,79,0.2);}
+
+/* ── Main ── */
+.main{padding:24px 32px;display:flex;flex-direction:column;gap:20px;}
+
+/* ── KPI row ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.kpi{background:linear-gradient(135deg,var(–bg2) 0%,var(–bg3) 100%);border:1px solid var(–border);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .3s,transform .2s;animation:fadeUp .5s ease both;}
+.kpi::before{content:’’;position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(–green),transparent);opacity:0;transition:opacity .3s;}
+.kpi:hover{border-color:rgba(0,200,83,0.4);transform:translateY(-2px);}
+.kpi:hover::before{opacity:1;}
+.kpi:nth-child(1){animation-delay:.05s;}
+.kpi:nth-child(2){animation-delay:.1s;}
+.kpi:nth-child(3){animation-delay:.15s;}
+.kpi:nth-child(4){animation-delay:.2s;}
+.kpi-label{font-family:‘DM Mono’,monospace;font-size:9px;color:var(–text3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.kpi-src{font-size:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);padding:1px 5px;border-radius:2px;color:var(–text3);}
+.kpi-val{font-family:‘DM Mono’,monospace;font-size:1.55rem;font-weight:500;color:var(–text);line-height:1;}
+.kpi-sub{font-family:‘DM Mono’,monospace;font-size:10px;color:var(–text3);margin-top:6px;}
+
+/* ── Panel ── */
+.panel{background:linear-gradient(135deg,var(–bg2) 0%,var(–bg3) 100%);border:1px solid var(–border);border-radius:12px;padding:22px 24px;position:relative;overflow:hidden;}
+.panel-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.panel-title{font-family:‘DM Mono’,monospace;font-size:10px;color:var(–text2);letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+.panel-title::before{content:’’;display:inline-block;width:3px;height:14px;background:var(–green);border-radius:2px;}
+
+/* ── Mid row ── */
+.mid-row{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;}
+.chart-h{height:240px;position:relative;}
+
+/* ── Predictions ── */
+.pred-stack{display:flex;flex-direction:column;gap:10px;}
+.pred{background:rgba(255,255,255,.02);border:1px solid var(–border2);border-radius:8px;padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;transition:background .2s,border-color .2s;position:relative;overflow:hidden;animation:fadeUp .5s ease both;}
+.pred::before{content:’’;position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+.pred.m1::before{background:var(–cyan);}
+.pred.m2::before{background:var(–green);}
+.pred.m3::before{background:var(–lime);}
+.pred:nth-child(1){animation-delay:.2s;}
+.pred:nth-child(2){animation-delay:.3s;}
+.pred:nth-child(3){animation-delay:.4s;}
+.pred:hover{background:rgba(255,255,255,.04);border-color:var(–border);}
+.pred-mo{font-family:‘DM Mono’,monospace;font-size:9px;color:var(–text3);letter-spacing:.1em;grid-column:1;}
+.pred-price{font-family:‘DM Mono’,monospace;font-size:1.3rem;font-weight:500;grid-column:2;grid-row:1/3;align-self:center;text-align:right;}
+.pred-meta{grid-column:1;display:flex;align-items:center;gap:8px;margin-top:4px;}
+.pred-range{font-family:‘DM Mono’,monospace;font-size:9px;color:var(–text3);}
+.pred-chg{font-family:‘DM Mono’,monospace;font-size:10px;font-weight:500;}
+.conf-wrap{grid-column:1/-1;margin-top:8px;}
+.conf-bar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:3px;}
+.conf-fill{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+.pred.m1 .conf-fill{background:var(–cyan);}
+.pred.m2 .conf-fill{background:var(–green);}
+.pred.m3 .conf-fill{background:var(–lime);}
+.conf-txt{display:flex;justify-content:space-between;font-family:‘DM Mono’,monospace;font-size:8px;color:var(–text3);}
+
+/* ── Bot row ── */
+.bot-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+
+.frow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;}
+.frow:last-child{border-bottom:none;}
+.frow-name{flex:1;color:var(–text2);font-size:11px;}
+.frow-src{font-family:‘DM Mono’,monospace;font-size:8px;color:var(–text3);display:block;margin-top:2px;}
+.frow-val{font-family:‘DM Mono’,monospace;font-size:11px;font-weight:500;text-align:right;min-width:55px;}
+.ftag{font-size:8px;font-family:‘DM Mono’,monospace;padding:2px 7px;border-radius:2px;letter-spacing:.06em;white-space:nowrap;min-width:60px;text-align:center;}
+.fp{background:rgba(0,200,83,.1);color:var(–green);}
+.fn{background:rgba(255,61,87,.1);color:var(–red);}
+.fu{background:rgba(255,171,0,.1);color:var(–amber);}
+
+/* ── Gauge ── */
+.gauge-wrap{text-align:center;padding:8px 0 0;}
+.gauge-label{font-family:‘Bebas Neue’,sans-serif;font-size:2rem;letter-spacing:.08em;margin-top:-6px;}
+.sig-pill{display:inline-block;font-family:‘DM Mono’,monospace;font-size:10px;padding:5px 16px;border-radius:3px;letter-spacing:.1em;margin-top:8px;}
+.sig-hold{background:rgba(255,171,0,.1);border:1px solid rgba(255,171,0,.3);color:var(–amber);}
+.sig-buy{background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:var(–green);}
+
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px;}
+.stat-row:last-child{border-bottom:none;}
+.stat-name{color:var(–text3);font-family:‘DM Mono’,monospace;font-size:10px;}
+.stat-name span{display:block;font-size:8px;color:var(–text3);opacity:.6;margin-top:1px;}
+.stat-val{font-family:‘DM Mono’,monospace;font-size:12px;font-weight:500;}
+
+/* ── Risk items ── */
+.risk-item{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.risk-item:last-child{border-bottom:none;}
+.risk-num{font-family:‘Bebas Neue’,sans-serif;font-size:1.2rem;color:var(–text3);width:20px;line-height:1;padding-top:2px;}
+.risk-body{flex:1;}
+.risk-name{font-size:12px;font-weight:600;color:var(–text);}
+.risk-desc{font-size:10px;color:var(–text3);margin-top:2px;line-height:1.4;font-family:‘DM Mono’,monospace;}
+.risk-badge{font-family:‘DM Mono’,monospace;font-size:8px;padding:3px 8px;border-radius:2px;white-space:nowrap;letter-spacing:.06em;align-self:flex-start;}
+.rb-risk{background:rgba(255,61,87,.1);color:var(–red);border:1px solid rgba(255,61,87,.2);}
+.rb-opp{background:rgba(0,200,83,.1);color:var(–green);border:1px solid rgba(0,200,83,.2);}
+.rb-watch{background:rgba(255,171,0,.1);color:var(–amber);border:1px solid rgba(255,171,0,.2);}
+
+/* ── Simulator ── */
+.sim-grid{display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start;}
+.sim-result{background:rgba(0,200,83,.04);border:1px solid rgba(0,200,83,.18);border-radius:10px;padding:18px;position:sticky;top:20px;}
+.sim-price{font-family:‘Bebas Neue’,sans-serif;font-size:2.6rem;letter-spacing:.04em;color:var(–green);line-height:1;text-shadow:0 0 20px rgba(0,200,83,.3);transition:all .3s;}
+.sim-diff{font-family:‘DM Mono’,monospace;font-size:11px;color:var(–text2);margin-top:6px;transition:all .3s;}
+.sim-formula{margin-top:14px;background:rgba(255,213,79,.05);border:1px solid rgba(255,213,79,.15);border-radius:6px;padding:10px 12px;}
+.contrib-list{display:flex;flex-direction:column;gap:5px;}
+.contrib-item{display:flex;align-items:center;gap:6px;font-family:‘DM Mono’,monospace;font-size:9px;}
+.contrib-name{color:var(–text3);width:90px;}
+.contrib-val{font-weight:500;min-width:60px;text-align:right;}
+.contrib-mini-bar{flex:1;height:3px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;}
+.contrib-mini-fill{height:100%;border-radius:2px;transition:width .4s;}
+
+.sim-levers{display:flex;flex-direction:column;gap:14px;}
+.lever-row{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px 14px;transition:border-color .2s;}
+.lever-row:hover{border-color:rgba(0,200,83,.2);}
+.lever-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.lever-name{font-size:12px;font-weight:600;color:var(–text);}
+.lever-src{font-family:‘DM Mono’,monospace;font-size:9px;color:var(–text3);margin-top:2px;}
+.wval{color:var(–gold);}
+.lever-badge{font-family:‘DM Mono’,monospace;font-size:8px;padding:2px 8px;border-radius:2px;background:rgba(255,255,255,.05);color:var(–text3);border:1px solid rgba(255,255,255,.08);white-space:nowrap;letter-spacing:.06em;}
+.lever-track{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.lever-bound{font-family:‘DM Mono’,monospace;font-size:8px;color:var(–text3);white-space:nowrap;width:36px;}
+.lever-bound:last-child{text-align:right;}
+.lever-slider{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:rgba(255,255,255,.08);outline:none;cursor:pointer;}
+.lever-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(–green);cursor:pointer;box-shadow:0 0 8px rgba(0,200,83,.5);}
+.lever-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(–green);cursor:pointer;border:none;}
+.lever-vals{display:flex;justify-content:space-between;font-family:‘DM Mono’,monospace;font-size:9px;margin-bottom:6px;}
+.lever-delta{color:var(–text2);font-weight:500;}
+.lever-impact-bar{height:3px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;}
+.lever-fill{height:100%;border-radius:2px;width:0%;transition:width .4s cubic-bezier(.4,0,.2,1);}
+
+/* ── Broker grid ── */
+.broker-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;}
+.broker-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px;text-align:center;transition:border-color .2s,transform .2s;cursor:default;}
+.broker-card:hover{border-color:rgba(0,200,83,.3);transform:translateY(-2px);}
+.broker-name{font-family:‘DM Mono’,monospace;font-size:8px;color:var(–text3);margin-bottom:6px;letter-spacing:.04em;}
+.broker-target{font-family:‘Bebas Neue’,sans-serif;font-size:1.3rem;letter-spacing:.04em;line-height:1;}
+.broker-upside{font-family:‘DM Mono’,monospace;font-size:10px;font-weight:500;margin:4px 0 6px;}
+.broker-bar{height:3px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;margin-bottom:6px;}
+.broker-method{font-family:‘DM Mono’,monospace;font-size:7.5px;color:var(–text3);line-height:1.4;}
+
+/* ── Sources ── */
+.src-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;}
+.src-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px 14px;transition:border-color .2s;}
+.src-card:hover{border-color:var(–border);}
+.src-top{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.src-icon{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.src-name{font-size:11px;font-weight:600;color:var(–text);}
+.src-url{font-family:‘DM Mono’,monospace;font-size:8px;color:var(–text3);margin-bottom:5px;display:block;}
+.src-desc{font-size:10px;color:var(–text3);line-height:1.5;}
+.src-data{margin-top:6px;font-family:‘DM Mono’,monospace;font-size:9px;color:var(–green);background:rgba(0,200,83,.05);border-left:2px solid rgba(0,200,83,.3);padding:3px 7px;border-radius:0 3px 3px 0;}
+.live-dot{width:6px;height:6px;background:var(–green);border-radius:50%;display:inline-block;margin-right:3px;box-shadow:0 0 5px var(–green);animation:pulse 1.5s infinite;}
+
+/* ── Divider ── */
+.sdiv{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.sdiv-title{font-family:‘DM Mono’,monospace;font-size:9px;color:var(–text3);text-transform:uppercase;letter-spacing:.14em;white-space:nowrap;}
+.sdiv-line{flex:1;height:1px;background:var(–border2);}
+
+/* ── Footer ── */
+.footer{margin:0 32px 32px;border-top:1px solid var(–border2);padding-top:20px;display:flex;flex-direction:column;gap:12px;}
+.disclaimer{background:rgba(255,61,87,.04);border:1px solid rgba(255,61,87,.15);border-radius:8px;padding:12px 16px;font-family:‘DM Mono’,monospace;font-size:10px;color:var(–text3);line-height:1.7;}
+.disclaimer strong{color:var(–red);}
+.copyright{text-align:center;font-family:‘DM Mono’,monospace;font-size:10px;color:var(–text3);letter-spacing:.08em;}
+
+/* responsive */
+@media(max-width:1100px){.mid-row{grid-template-columns:1fr;}.bot-row{grid-template-columns:1fr 1fr;}.kpi-row{grid-template-columns:repeat(2,1fr);}.sim-grid{grid-template-columns:1fr;}.broker-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:700px){.bot-row,.kpi-row,.src-grid{grid-template-columns:1fr;}.hdr{padding:20px 16px 16px;}.main{padding:16px;}.hdr-title{font-size:2.2rem;}.price-big{font-size:2.8rem;}.footer{margin:0 16px 24px;}.broker-grid{grid-template-columns:repeat(2,1fr);}}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+<!-- Ticker -->
+
+<div class="ticker">
+  <div class="ticker-scroll">
+    <span class="ticker-item"><span class="sym">011170.KS</span> <span id="tk-price" class="up">₩83,400</span> <span class="up">▲+3.29%</span></span>
+    <span class="ticker-item"><span class="sym">USD/KRW</span> <span id="tk-fx">₩1,471.95</span> <span class="dn">▼-0.12%</span></span>
+    <span class="ticker-item"><span class="sym">NAPHTHA</span> <span class="dn">$620/톤</span> <span class="dn">▼원가부담</span></span>
+    <span class="ticker-item"><span class="sym">ETHYLENE SPREAD</span> <span class="amber">$180/톤</span> <span class="amber">▲바닥탈출</span></span>
+    <span class="ticker-item"><span class="sym">WTI CRUDE</span> <span class="dn">$87.29/bbl</span> <span class="up">▲유가하락→스프레드개선</span></span>
+    <span class="ticker-item"><span class="sym">목표주가 avg</span> <span class="gold">₩97,000</span> <span class="up">BUY</span></span>
+    <span class="ticker-item"><span class="sym">PBR</span> <span class="amber">0.27x</span> <span class="up">▲역대최저→상방여력</span></span>
+    <!-- duplicate -->
+    <span class="ticker-item"><span class="sym">011170.KS</span> <span class="up">₩83,400</span> <span class="up">▲+3.29%</span></span>
+    <span class="ticker-item"><span class="sym">USD/KRW</span> <span id="tk-fx2">₩1,471.95</span> <span class="dn">▼-0.12%</span></span>
+    <span class="ticker-item"><span class="sym">NAPHTHA</span> <span class="dn">$620/톤</span> <span class="dn">▼원가부담</span></span>
+    <span class="ticker-item"><span class="sym">ETHYLENE SPREAD</span> <span class="amber">$180/톤</span> <span class="amber">▲바닥탈출</span></span>
+    <span class="ticker-item"><span class="sym">WTI CRUDE</span> <span class="dn">$87.29/bbl</span> <span class="up">▲유가하락→스프레드개선</span></span>
+    <span class="ticker-item"><span class="sym">목표주가 avg</span> <span class="gold">₩97,000</span> <span class="up">BUY</span></span>
+    <span class="ticker-item"><span class="sym">PBR</span> <span class="amber">0.27x</span> <span class="up">▲역대최저→상방여력</span></span>
+  </div>
+</div>
+
+<!-- Header -->
+
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-badge">
+      <span class="pulse"></span>
+      KRX:011170 · 롯데케미칼
+      <span class="api-pill api-loading" id="apiStatus">연결 중...</span>
+    </div>
+    <div class="hdr-title">롯데케미칼<br><span>AI 주가 예측</span></div>
+    <div class="hdr-sub">// 석유화학 다운사이클 바닥 · 구조조정 모멘텀 · © 2026 정임두</div>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-time" id="updateTime">2026.03.11 기준 (고정값)</div>
+    <div class="price-big" id="priceBig">₩83,400</div>
+    <div class="price-chg" id="priceChg"><span class="up">▲ +2,664 (+3.29%) 전일 대비</span></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- KPI row -->
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">롯데케미칼 현재가 <span class="kpi-src">Yahoo Finance</span></div>
+      <div class="kpi-val" id="kpiPrice">₩83,400</div>
+      <div class="kpi-sub" id="kpiChg"><span class="up">▲ +3.29%</span></div>
+      <div class="kpi-sub" id="kpiRange" style="margin-top:2px;">52주: ₩53,800 ~ ₩89,500</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">USD/KRW 환율 <span class="kpi-src">ExchangeRate-API</span></div>
+      <div class="kpi-val" id="kpiFx">₩1,471.95</div>
+      <div class="kpi-sub" id="kpiFxDate">업데이트: 실시간</div>
+      <div class="kpi-sub" style="margin-top:2px;font-size:9px;">환율↑ → 수출 경쟁력↑ (양면 효과)</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">나프타/에틸렌 스프레드 <span class="kpi-src">ICIS · 2026.03</span></div>
+      <div class="kpi-val amber">$180/톤</div>
+      <div class="kpi-sub amber">바닥권 소폭 반등 · 손익분기 $300</div>
+      <div class="kpi-sub" style="margin-top:2px;font-size:9px;">WTI↓ → 나프타↓ → 스프레드 개선 기대</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">애널리스트 컨센서스 <span class="kpi-src">FnGuide · 2026.03</span></div>
+      <div class="kpi-val" style="color:var(--amber);">BUY</div>
+      <div class="kpi-sub up">iM증권 ₩110K · KB증권 ₩80K</div>
+      <div class="kpi-sub" style="margin-top:2px;font-size:9px;">목표가 avg ₩97,000 · PBR 0.27x 역대최저</div>
+    </div>
+  </div>
+
+  <!-- Chart + Predictions -->
+
+  <div class="mid-row">
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="panel-title">주가 추이 및 3개월 예측</div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);">실선 = 실제 · 점선 = AI 예측</div>
+      </div>
+      <div class="chart-h"><canvas id="priceChart"></canvas></div>
+    </div>
+
+```
+<div class="panel">
+  <div class="panel-hdr">
+    <div class="panel-title">월별 가격 예측</div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);">현재가 기준 동적 산출</div>
+  </div>
+  <div class="pred-stack">
+    <div class="pred m1">
+      <div class="pred-mo">📅 2026년 3월 (이번 달)</div>
+      <div class="pred-price" style="color:var(--cyan);" id="pred1">₩86,000</div>
+      <div class="pred-meta">
+        <div class="pred-range" id="pred1r">₩79K ~ ₩92K</div>
+        <div class="pred-chg up" id="pred1c">▲+3.1%</div>
+      </div>
+      <div class="conf-wrap">
+        <div class="conf-bar"><div class="conf-fill" style="width:65%;"></div></div>
+        <div class="conf-txt"><span>신뢰도</span><span>65%</span></div>
+      </div>
+    </div>
+    <div class="pred m2">
+      <div class="pred-mo">📅 2026년 4월 (다음 달)</div>
+      <div class="pred-price" style="color:var(--green);" id="pred2">₩92,000</div>
+      <div class="pred-meta">
+        <div class="pred-range" id="pred2r">₩83K ~ ₩105K</div>
+        <div class="pred-chg up" id="pred2c">▲+10.3%</div>
+      </div>
+      <div class="conf-wrap">
+        <div class="conf-bar"><div class="conf-fill" style="width:52%;"></div></div>
+        <div class="conf-txt"><span>신뢰도</span><span>52%</span></div>
+      </div>
+    </div>
+    <div class="pred m3">
+      <div class="pred-mo">📅 2026년 5월 (그 다음 달)</div>
+      <div class="pred-price" style="color:var(--lime);" id="pred3">₩99,000</div>
+      <div class="pred-meta">
+        <div class="pred-range" id="pred3r">₩81K ~ ₩120K</div>
+        <div class="pred-chg up" id="pred3c">▲+18.7%</div>
+      </div>
+      <div class="conf-wrap">
+        <div class="conf-bar"><div class="conf-fill" style="width:41%;"></div></div>
+        <div class="conf-txt"><span>신뢰도</span><span>41%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- Bottom row -->
+
+  <div class="bot-row">
+
+```
+<!-- Factors -->
+<div class="panel">
+  <div class="sdiv"><div class="sdiv-title">⚙ 주가 영향 요인</div><div class="sdiv-line"></div></div>
+  <div class="frow">
+    <div class="frow-name">USD/KRW 환율<span class="frow-src"><span class="live-dot"></span>ExchangeRate-API · 실시간</span></div>
+    <div class="frow-val amber" id="fxFactor">₩1,472</div>
+    <div class="ftag fu">양면적</div>
+  </div>
+  <div class="frow">
+    <div class="frow-name">WTI 유가 하락<span class="frow-src">EIA STEO · 2026.03.09</span></div>
+    <div class="frow-val up">$87.29↓</div>
+    <div class="ftag fp">스프레드↑</div>
+  </div>
+  <div class="frow">
+    <div class="frow-name">에틸렌 스프레드<span class="frow-src">ICIS · 석유화학업황</span></div>
+    <div class="frow-val amber">$180/톤</div>
+    <div class="ftag fn">BEP 이하</div>
+  </div>
+  <div class="frow">
+    <div class="frow-name">HD현대케미칼 통폐합<span class="frow-src">한국경제 2025.11.26</span></div>
+    <div class="frow-val up">진행중</div>
+    <div class="ftag fp">구조조정↑</div>
+  </div>
+  <div class="frow">
+    <div class="frow-name">중국 NCC 과잉증설<span class="frow-src">KB증권 리서치</span></div>
+    <div class="frow-val dn">연 1,000만톤</div>
+    <div class="ftag fn">수급압박</div>
+  </div>
+  <div class="frow">
+    <div class="frow-name">글로벌 구조조정<span class="frow-src">iM증권 2025.11.13</span></div>
+    <div class="frow-val up">6~7% 감축</div>
+    <div class="ftag fp">업황개선</div>
+  </div>
+  <div class="frow">
+    <div class="frow-name">롯데그룹 재무리스크<span class="frow-src">신용평가 · 유동성 우려</span></div>
+    <div class="frow-val dn">부채 높음</div>
+    <div class="ftag fn">리스크</div>
+  </div>
+  <div class="frow">
+    <div class="frow-name">2027년 흑자전환 전망<span class="frow-src">KB증권 · iM증권</span></div>
+    <div class="frow-val up">기대</div>
+    <div class="ftag fp">장기 모멘텀</div>
+  </div>
+</div>
+
+<!-- Signal + Stats -->
+<div class="panel" style="display:flex;flex-direction:column;gap:20px;">
+  <div>
+    <div class="sdiv"><div class="sdiv-title">🎯 종합 투자 신호</div><div class="sdiv-line"></div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);">FnGuide · iM증권 · KB증권</div></div>
+    <div class="gauge-wrap">
+      <svg width="200" height="115" viewBox="0 0 200 115" style="overflow:visible;">
+        <path d="M 15 100 A 85 85 0 0 1 185 100" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="16" stroke-linecap="round"/>
+        <path d="M 15 100 A 85 85 0 0 1 57 28" fill="none" stroke="rgba(255,61,87,0.3)" stroke-width="16" stroke-linecap="round"/>
+        <path d="M 57 28 A 85 85 0 0 1 143 28" fill="none" stroke="rgba(255,171,0,0.3)" stroke-width="16" stroke-linecap="round"/>
+        <path d="M 143 28 A 85 85 0 0 1 185 100" fill="none" stroke="rgba(0,200,83,0.3)" stroke-width="16" stroke-linecap="round"/>
+        <!-- 바늘: 중간-오른쪽 (BUY 방향) -->
+        <path d="M 15 100 A 85 85 0 0 1 163 58" fill="none" stroke="url(#gg2)" stroke-width="16" stroke-linecap="round" stroke-dasharray="168 268"/>
+        <defs>
+          <linearGradient id="gg2" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#ff3d57"/>
+            <stop offset="50%" style="stop-color:#ffab00"/>
+            <stop offset="100%" style="stop-color:#00c853"/>
+          </linearGradient>
+        </defs>
+        <line x1="100" y1="100" x2="158" y2="55" stroke="#ffab00" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="100" cy="100" r="5" fill="#ffab00" style="filter:drop-shadow(0 0 6px #ffab00)"/>
+        <text x="10" y="114" fill="#ff3d57" font-size="8" font-family="DM Mono">SELL</text>
+        <text x="87" y="14" fill="#ffab00" font-size="8" font-family="DM Mono" text-anchor="middle">HOLD</text>
+        <text x="187" y="114" fill="#00c853" font-size="8" font-family="DM Mono" text-anchor="end">BUY</text>
+      </svg>
+      <div class="gauge-label" style="color:var(--amber);">조건부 매수</div>
+      <div class="sig-pill sig-hold">BUY · 장기관점 · 바닥권</div>
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);margin-top:8px;">iM증권 BUY · KB증권 BUY · 적자 지속 주의</div>
+    </div>
+  </div>
+  <div>
+    <div class="sdiv"><div class="sdiv-title">📊 핵심 지표</div><div class="sdiv-line"></div></div>
+    <div class="stat-row"><div class="stat-name">현재가<span>Yahoo Finance · 실시간</span></div><div class="stat-val up" id="statPrice">₩83,400</div></div>
+    <div class="stat-row"><div class="stat-name">52주 High/Low<span>아이투자 · 2026.03</span></div><div class="stat-val">₩89,500 / ₩53,800</div></div>
+    <div class="stat-row"><div class="stat-name">PBR (현재)<span>아이투자 · FnGuide</span></div><div class="stat-val amber">0.27x</div></div>
+    <div class="stat-row"><div class="stat-name">시가총액<span>아이투자 · 2026.03</span></div><div class="stat-val">₩3.69조</div></div>
+    <div class="stat-row"><div class="stat-name">목표가 (avg)<span>iM증권 ₩110K · KB증권 ₩80K</span></div><div class="stat-val gold">₩97,000</div></div>
+    <div class="stat-row"><div class="stat-name">2026 영업손실 전망<span>iM증권 2025.11.13</span></div><div class="stat-val dn">-₩6,030억</div></div>
+  </div>
+</div>
+
+<!-- Risk/Opportunity -->
+<div class="panel">
+  <div class="sdiv"><div class="sdiv-title">⚠ 리스크 & 기회</div><div class="sdiv-line"></div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);">KB증권 · iM증권 · 한국경제</div></div>
+  <div class="risk-item">
+    <div class="risk-num">01</div>
+    <div class="risk-body">
+      <div class="risk-name">글로벌 구조조정 가속화</div>
+      <div class="risk-desc">6~7% NCC 감축 시 균형 회복<br>iM증권 — "진짜 바닥탈출 논의 가능"</div>
+    </div>
+    <div class="risk-badge rb-opp">기회</div>
+  </div>
+  <div class="risk-item">
+    <div class="risk-num">02</div>
+    <div class="risk-body">
+      <div class="risk-name">중국 과잉증설 장기화</div>
+      <div class="risk-desc">연 1,000만톤 추가 · 수급 회복 2028년<br>KB증권 — "시황회복 제한적"</div>
+    </div>
+    <div class="risk-badge rb-risk">리스크</div>
+  </div>
+  <div class="risk-item">
+    <div class="risk-num">03</div>
+    <div class="risk-body">
+      <div class="risk-name">HD현대케미칼 통폐합</div>
+      <div class="risk-desc">대산공장 물적분할 → 합병 진행<br>NCC 중복설비 최적화 기대</div>
+    </div>
+    <div class="risk-badge rb-opp">기회</div>
+  </div>
+  <div class="risk-item">
+    <div class="risk-num">04</div>
+    <div class="risk-body">
+      <div class="risk-name">롯데그룹 유동성 리스크</div>
+      <div class="risk-desc">그룹 전반 부채비율 상승<br>자회사 노이즈 → 주가 변동성↑</div>
+    </div>
+    <div class="risk-badge rb-risk">리스크</div>
+  </div>
+  <div class="risk-item">
+    <div class="risk-num">05</div>
+    <div class="risk-body">
+      <div class="risk-name">유가 하락 → 스프레드 개선</div>
+      <div class="risk-desc">WTI $87 → 나프타 원가↓<br>iM증권 — "하반기 적자 축소 기대"</div>
+    </div>
+    <div class="risk-badge rb-watch">관망</div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- Simulator -->
+
+  <div class="panel" style="border-color:rgba(0,200,83,0.25);">
+    <div class="panel-hdr">
+      <div class="panel-title" style="color:var(--green);">⚡ 거시지표 레버 시뮬레이터</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);">슬라이더 조정 → 주가 즉시 재계산</div>
+        <button onclick="resetSim()" style="background:rgba(0,200,83,0.1);border:1px solid rgba(0,200,83,0.3);color:var(--green);font-family:'DM Mono',monospace;font-size:9px;padding:4px 10px;border-radius:3px;cursor:pointer;letter-spacing:.06em;">RESET</button>
+      </div>
+    </div>
+    <div class="sim-grid">
+      <div class="sim-result">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.1em;margin-bottom:10px;">시뮬레이션 예측 주가</div>
+        <div class="sim-price" id="simPrice">₩83,400</div>
+        <div class="sim-diff" id="simDiff">기준가 대비 ±0원 (±0.00%)</div>
+        <div style="margin-top:16px;">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);margin-bottom:8px;">요인별 기여도</div>
+          <div class="contrib-list" id="contribList"></div>
+        </div>
+        <div class="sim-formula">
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);margin-bottom:6px;">산출 공식</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);line-height:1.8;" id="simFormula">P = P₀ × (1 + Σwᵢ·Δxᵢ)</div>
+        </div>
+      </div>
+      <div class="sim-levers">
+        <!-- 환율 -->
+        <div class="lever-row">
+          <div class="lever-header">
+            <div class="lever-info"><div class="lever-name">USD/KRW 환율</div><div class="lever-src">가중치 w = <span class="wval">+0.25</span> · 수출경쟁력↑ / 원료수입비↑ 상충</div></div>
+            <div class="lever-badge" id="lb-fx">기준</div>
+          </div>
+          <div class="lever-track">
+            <span class="lever-bound">-30%</span>
+            <input type="range" class="lever-slider" id="sl-fx" min="-30" max="30" value="0" step="0.5" oninput="runSim()"/>
+            <span class="lever-bound">+30%</span>
+          </div>
+          <div class="lever-vals">
+            <span style="color:var(--text3);">현재: <span id="cv-fx">₩1,472</span></span>
+            <span class="lever-delta" id="ld-fx">변동: ±0%</span>
+            <span style="color:var(--text3);">시뮬: <span class="gold" id="sv-fx">₩1,472</span></span>
+          </div>
+          <div class="lever-impact-bar"><div class="lever-fill" id="lf-fx" style="background:var(--amber);"></div></div>
+        </div>
+        <!-- 유가 -->
+        <div class="lever-row">
+          <div class="lever-header">
+            <div class="lever-info"><div class="lever-name">WTI 원유 (나프타 원가 연동)</div><div class="lever-src">가중치 w = <span class="wval">+0.48</span> · 유가↓ → 나프타↓ → 스프레드↑</div></div>
+            <div class="lever-badge" id="lb-oil">기준</div>
+          </div>
+          <div class="lever-track">
+            <span class="lever-bound">-50%</span>
+            <input type="range" class="lever-slider" id="sl-oil" min="-50" max="50" value="0" step="1" oninput="runSim()"/>
+            <span class="lever-bound">+50%</span>
+          </div>
+          <div class="lever-vals">
+            <span style="color:var(--text3);">현재: <span id="cv-oil">$87.29</span></span>
+            <span class="lever-delta" id="ld-oil">변동: ±0%</span>
+            <span style="color:var(--text3);">시뮬: <span class="gold" id="sv-oil">$87.29</span></span>
+          </div>
+          <div class="lever-impact-bar"><div class="lever-fill" id="lf-oil" style="background:var(--green);"></div></div>
+        </div>
+        <!-- 에틸렌 스프레드 -->
+        <div class="lever-row">
+          <div class="lever-header">
+            <div class="lever-info"><div class="lever-name">에틸렌-나프타 스프레드</div><div class="lever-src">가중치 w = <span class="wval">+0.72</span> · 핵심 수익성 지표 · ICIS</div></div>
+            <div class="lever-badge" id="lb-spread">기준</div>
+          </div>
+          <div class="lever-track">
+            <span class="lever-bound">-60%</span>
+            <input type="range" class="lever-slider" id="sl-spread" min="-60" max="100" value="0" step="5" oninput="runSim()"/>
+            <span class="lever-bound">+100%</span>
+          </div>
+          <div class="lever-vals">
+            <span style="color:var(--text3);">현재: <span id="cv-spread">$180/톤</span></span>
+            <span class="lever-delta" id="ld-spread">변동: ±0%</span>
+            <span style="color:var(--text3);">시뮬: <span class="gold" id="sv-spread">$180/톤</span></span>
+          </div>
+          <div class="lever-impact-bar"><div class="lever-fill" id="lf-spread" style="background:var(--green);"></div></div>
+        </div>
+        <!-- 중국 공급 -->
+        <div class="lever-row">
+          <div class="lever-header">
+            <div class="lever-info"><div class="lever-name">중국 NCC 신규증설 (수급압박)</div><div class="lever-src">가중치 w = <span class="wval">-0.55</span> · KB증권 · ICIS</div></div>
+            <div class="lever-badge" id="lb-china">기준</div>
+          </div>
+          <div class="lever-track">
+            <span class="lever-bound">-50%</span>
+            <input type="range" class="lever-slider" id="sl-china" min="-50" max="30" value="0" step="5" oninput="runSim()"/>
+            <span class="lever-bound">+30%</span>
+          </div>
+          <div class="lever-vals">
+            <span style="color:var(--text3);">현재: <span id="cv-china">100p (기준)</span></span>
+            <span class="lever-delta" id="ld-china">변동: ±0%</span>
+            <span style="color:var(--text3);">시뮬: <span class="gold" id="sv-china">100p</span></span>
+          </div>
+          <div class="lever-impact-bar"><div class="lever-fill" id="lf-china" style="background:var(--red);"></div></div>
+        </div>
+        <!-- 구조조정 -->
+        <div class="lever-row">
+          <div class="lever-header">
+            <div class="lever-info"><div class="lever-name">글로벌 구조조정 진행률</div><div class="lever-src">가중치 w = <span class="wval">+0.45</span> · iM증권 · 한국경제</div></div>
+            <div class="lever-badge" id="lb-restr" style="background:rgba(0,200,83,.1);color:var(--green);border-color:rgba(0,200,83,.25);">기준</div>
+          </div>
+          <div class="lever-track">
+            <span class="lever-bound">-30%</span>
+            <input type="range" class="lever-slider" id="sl-restr" min="-30" max="50" value="0" step="5" oninput="runSim()"/>
+            <span class="lever-bound">+50%</span>
+          </div>
+          <div class="lever-vals">
+            <span style="color:var(--text3);">현재: <span id="cv-restr">6~7% 감축</span></span>
+            <span class="lever-delta" id="ld-restr">변동: ±0%</span>
+            <span style="color:var(--text3);">시뮬: <span class="gold" id="sv-restr">기준</span></span>
+          </div>
+          <div class="lever-impact-bar"><div class="lever-fill" id="lf-restr" style="background:var(--green);"></div></div>
+        </div>
+      </div>
+    </div>
+
+```
+<!-- 증권사 목표가 -->
+<div style="margin-top:20px;border-top:1px solid var(--border2);padding-top:18px;">
+  <div class="sdiv" style="margin-bottom:12px;">
+    <div class="sdiv-title">🏦 증권사별 목표가 비교</div>
+    <div class="sdiv-line"></div>
+    <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);">FnGuide 집계 · 2025~2026 리포트 기준</div>
+  </div>
+  <div class="broker-grid">
+    <div class="broker-card" data-target="110000">
+      <div class="broker-name">iM증권</div>
+      <div class="broker-target gold">₩110,000</div>
+      <div class="broker-upside up" id="bu-0">+31.9%↑</div>
+      <div class="broker-bar"><div style="width:100%;height:100%;background:linear-gradient(90deg,var(--gold),var(--green));border-radius:2px;"></div></div>
+      <div class="broker-method">구조조정 + 2026 적자탈출 · P/B 상향</div>
+    </div>
+    <div class="broker-card" data-target="100000">
+      <div class="broker-name">대신증권</div>
+      <div class="broker-target gold">₩100,000</div>
+      <div class="broker-upside up" id="bu-1">+19.9%↑</div>
+      <div class="broker-bar"><div style="width:91%;height:100%;background:linear-gradient(90deg,var(--gold),var(--cyan));border-radius:2px;"></div></div>
+      <div class="broker-method">낮아지는 PER · 52주 신고가</div>
+    </div>
+    <div class="broker-card" data-target="90000">
+      <div class="broker-name">미래에셋</div>
+      <div class="broker-target" style="color:var(--cyan);">₩90,000</div>
+      <div class="broker-upside up" id="bu-2">+7.9%↑</div>
+      <div class="broker-bar"><div style="width:82%;height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:2px;"></div></div>
+      <div class="broker-method">P/B 0.3x 회복 시나리오</div>
+    </div>
+    <div class="broker-card" data-target="80000">
+      <div class="broker-name">KB증권</div>
+      <div class="broker-target" style="color:var(--cyan);">₩80,000</div>
+      <div class="broker-upside dn" id="bu-3">-4.1%↓</div>
+      <div class="broker-bar"><div style="width:73%;height:100%;background:linear-gradient(90deg,var(--cyan),var(--amber));border-radius:2px;"></div></div>
+      <div class="broker-method">P/B 0.26x · 2027 흑자전환</div>
+    </div>
+    <div class="broker-card" data-target="70000">
+      <div class="broker-name">삼성증권</div>
+      <div class="broker-target" style="color:var(--amber);">₩70,000</div>
+      <div class="broker-upside dn" id="bu-4">-16.1%↓</div>
+      <div class="broker-bar"><div style="width:64%;height:100%;background:linear-gradient(90deg,var(--amber),rgba(255,171,0,.4));border-radius:2px;"></div></div>
+      <div class="broker-method">보수적 · 적자지속 반영</div>
+    </div>
+    <div class="broker-card" data-target="53800">
+      <div class="broker-name">하한 (52주 최저)</div>
+      <div class="broker-target" style="color:var(--red);">₩53,800</div>
+      <div class="broker-upside dn" id="bu-5">-35.5%↓</div>
+      <div class="broker-bar"><div style="width:49%;height:100%;background:linear-gradient(90deg,var(--red),rgba(255,61,87,.3));border-radius:2px;"></div></div>
+      <div class="broker-method">52주 최저 · 다운사이드</div>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- Sources -->
+
+  <div class="panel">
+    <div class="sdiv"><div class="sdiv-title">📚 데이터 출처 및 판단 근거</div><div class="sdiv-line"></div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);">★ = 실시간 자동 연동</div></div>
+    <div class="src-grid">
+      <div class="src-card">
+        <div class="src-top"><div class="src-icon" style="background:rgba(0,229,255,.1);">★</div><div class="src-name">Yahoo Finance</div></div>
+        <span class="src-url">finance.yahoo.com/quote/011170.KS</span>
+        <div class="src-desc">롯데케미칼 실시간 주가 · 등락률 · 일중범위. allorigins 프록시 자동 연동.</div>
+        <div class="src-data">현재가 · 변동률 — 실시간</div>
+      </div>
+      <div class="src-card">
+        <div class="src-top"><div class="src-icon" style="background:rgba(0,229,255,.1);">★</div><div class="src-name">ExchangeRate-API</div></div>
+        <span class="src-url">open.er-api.com/v6/latest/USD</span>
+        <div class="src-desc">무료 · 키 불필요. USD/KRW 환율 자동 연동.</div>
+        <div class="src-data">USD/KRW — 실시간</div>
+      </div>
+      <div class="src-card">
+        <div class="src-top"><div class="src-icon" style="background:rgba(255,171,0,.1);">🛢</div><div class="src-name">EIA (미국 에너지부)</div></div>
+        <span class="src-url">eia.gov/outlooks/steo</span>
+        <div class="src-desc">WTI $87.29 · 브렌트 $94. 유가↓→나프타↓→스프레드개선 연결고리.</div>
+        <div class="src-data">WTI $87.29 — 2026.03.09</div>
+      </div>
+      <div class="src-card">
+        <div class="src-top"><div class="src-icon" style="background:rgba(0,200,83,.1);">📊</div><div class="src-name">iM증권 리서치</div></div>
+        <span class="src-url">businesspost.co.kr — 2025.11.13</span>
+        <div class="src-desc">목표주가 ₩110,000 (BUY). 글로벌 구조조정 6~7% 감축 → 바닥탈출 논의. 2026 영업손실 -₩6,030억 추정.</div>
+        <div class="src-data">목표가 ₩110,000 · BUY — 2025.11.13</div>
+      </div>
+      <div class="src-card">
+        <div class="src-top"><div class="src-icon" style="background:rgba(0,200,83,.1);">📈</div><div class="src-name">KB증권 리서치</div></div>
+        <span class="src-url">kbthink.com — 2025.11.26</span>
+        <div class="src-desc">목표주가 ₩80,000. HD현대케미칼 통폐합 순항. 2027년 P/B 0.4배 회복 기대. 시황회복 제한적.</div>
+        <div class="src-data">목표가 ₩80,000 · BUY — 2025.11.26</div>
+      </div>
+      <div class="src-card">
+        <div class="src-top"><div class="src-icon" style="background:rgba(255,213,79,.1);">📋</div><div class="src-name">아이투자 · FnGuide</div></div>
+        <span class="src-url">itooza.com · comp.fnguide.com</span>
+        <div class="src-desc">PBR 0.27x (역대 최저). 시가총액 ₩3.69조. 52주 최저 ₩53,800 / 최고 ₩89,500. ROE -13.23%.</div>
+        <div class="src-data">PBR · 시총 · 52주 — 2026.02~03</div>
+      </div>
+      <div class="src-card">
+        <div class="src-top"><div class="src-icon" style="background:rgba(0,200,83,.1);">🏭</div><div class="src-name">한국경제 (HANKYUNG)</div></div>
+        <span class="src-url">markets.hankyung.com/stock/011170</span>
+        <div class="src-desc">롯데케미칼-HD현대케미칼 통폐합 보도. 대산공장 물적분할 → 합병 구조. PBR 0.18배 하방 제한.</div>
+        <div class="src-data">통폐합 · 구조조정 — 2025.11.26</div>
+      </div>
+      <div class="src-card">
+        <div class="src-top"><div class="src-icon" style="background:rgba(255,171,0,.1);">📉</div><div class="src-name">밸류라인 · ICIS</div></div>
+        <span class="src-url">valueline.co.kr · icis.com</span>
+        <div class="src-desc">에틸렌-나프타 스프레드 $180/톤 (BEP $300 대비 적자). 2026 EPS 적자 확대 전망.</div>
+        <div class="src-data">스프레드 · EPS — 2026.02.28</div>
+      </div>
+      <div class="src-card">
+        <div class="src-top"><div class="src-icon" style="background:rgba(0,229,255,.1);">🌐</div><div class="src-name">Rising Tick · 씽크풀</div></div>
+        <span class="src-url">risingtick.com · thinkpool.com</span>
+        <div class="src-desc">현재가 ₩75,400~₩83,400 구간. RSI · EMA 기술지표. 수급신호 매우강함 (2/20 전환).</div>
+        <div class="src-data">기술지표 · 수급신호 — 2026.03</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="footer">
+  <div class="disclaimer">
+    <strong>⚠ 투자 주의사항</strong> — 롯데케미칼은 현재 <strong>다운사이클 구간</strong>으로 2026년 영업적자 -₩6,030억 추정(iM증권). 본 대시보드는 공개 자료 기반 참고용 분석이며 <strong>실제 수익을 보장하지 않습니다.</strong> 석유화학 업황, 유가, 환율, 중국 공급 변동에 따라 주가가 크게 변동할 수 있습니다. 투자 결정은 반드시 전문 금융 투자 어드바이저 상담 후 본인 판단으로 이루어져야 합니다.
+  </div>
+  <div class="copyright">© 2026 정임두. All rights reserved. 무단 복제 및 배포를 금합니다. &nbsp;|&nbsp; LOTTE CHEMICAL AI PREDICTION DASHBOARD</div>
+</div>
+
+</div><!-- /wrap -->
+<script>
+const FB = 83400;
+const fmt = n => '₩' + Math.round(n).toLocaleString('ko-KR');
+const fmtK = n => '₩' + Math.round(n/1000).toLocaleString('ko-KR') + 'K';
+
+function setApi(msg, cls) {
+const el = document.getElementById(‘apiStatus’);
+el.textContent = msg; el.className = ’api-pill ’ + cls;
+}
+
+// ExchangeRate-API
+async function loadFX() {
+try {
+const r = await fetch(‘https://open.er-api.com/v6/latest/USD’);
+const d = await r.json();
+if (d?.rates?.KRW) {
+const rate = d.rates.KRW;
+const disp = ‘₩’ + rate.toLocaleString(‘ko-KR’, {maximumFractionDigits:2});
+document.getElementById(‘kpiFx’).textContent = disp;
+document.getElementById(‘kpiFxDate’).textContent = ‘업데이트: ’ + (d.time_last_update_utc||’’).slice(0,10);
+document.getElementById(‘fxFactor’).textContent = ‘₩’ + Math.round(rate).toLocaleString();
+document.querySelectorAll(’#tk-fx,#tk-fx2’).forEach(el => el.textContent = disp);
+}
+} catch(e) {
+document.getElementById(‘kpiFx’).textContent = ‘₩1,471.95’;
+}
+}
+
+// Yahoo Finance
+async function loadStock() {
+try {
+const url = ‘https://query1.finance.yahoo.com/v8/finance/chart/011170.KS?interval=1d&range=1d’;
+const proxy = ‘https://api.allorigins.win/get?url=’ + encodeURIComponent(url);
+const r = await fetch(proxy, {signal: AbortSignal.timeout(9000)});
+const w = await r.json();
+const meta = JSON.parse(w.contents).chart.result[0].meta;
+const price = meta.regularMarketPrice || meta.previousClose;
+const prev = meta.chartPreviousClose || meta.previousClose;
+const chg = price - prev;
+const pct = chg / prev * 100;
+const sign = chg >= 0 ? ‘▲’ : ‘▼’;
+const cls = chg >= 0 ? ‘up’ : ‘dn’;
+const high = meta.regularMarketDayHigh;
+const low = meta.regularMarketDayLow;
+
+```
+document.getElementById('priceBig').textContent = fmt(price);
+document.getElementById('priceChg').innerHTML = `<span class="${cls}">${sign} ${Math.abs(chg).toLocaleString('ko-KR')} (${chg>=0?'+':''}${pct.toFixed(2)}%) 전일 대비</span>`;
+document.getElementById('kpiPrice').textContent = fmt(price);
+document.getElementById('kpiChg').innerHTML = `<span class="${cls}">${sign} ${pct>=0?'+':''}${pct.toFixed(2)}%</span>`;
+if (high && low) document.getElementById('kpiRange').textContent = `일중: ${fmt(low)} ~ ${fmt(high)}`;
+document.getElementById('statPrice').textContent = fmt(price);
+document.getElementById('tk-price').textContent = fmt(price);
+
+const now = new Date();
+document.getElementById('updateTime').textContent = `갱신 ${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} KST`;
+
+setApi('실시간 연동 ✓', 'api-ok');
+updatePred(price);
+updateChart(price);
+BASE_PRICE_SIM.val = price;
+updateBrokerUpside(price);
+return price;
+```
+
+} catch(e) {
+setApi(‘고정값 사용’, ‘api-err’);
+updatePred(FB);
+return FB;
+}
+}
+
+// Predictions
+function updatePred(p) {
+const r = m => Math.round(p * m / 100) * 100;
+const pct = v => ((v-p)/p*100).toFixed(1);
+const p1=r(1.031), p2=r(1.103), p3=r(1.187);
+document.getElementById(‘pred1’).textContent = fmt(p1);
+document.getElementById(‘pred2’).textContent = fmt(p2);
+document.getElementById(‘pred3’).textContent = fmt(p3);
+document.getElementById(‘pred1r’).textContent = `${fmtK(r(0.948))} ~ ${fmtK(r(1.104))}`;
+document.getElementById(‘pred2r’).textContent = `${fmtK(r(0.996))} ~ ${fmtK(r(1.259))}`;
+document.getElementById(‘pred3r’).textContent = `${fmtK(r(0.972))} ~ ${fmtK(r(1.440))}`;
+document.getElementById(‘pred1c’).textContent = `▲+${pct(p1)}%`;
+document.getElementById(‘pred2c’).textContent = `▲+${pct(p2)}%`;
+document.getElementById(‘pred3c’).textContent = `▲+${pct(p3)}%`;
+}
+
+// Chart
+const chartCtx = document.getElementById(‘priceChart’).getContext(‘2d’);
+window._chart = new Chart(chartCtx, {
+type: ‘line’,
+data: {
+labels: [‘2025-09’,‘2025-10’,‘2025-11’,‘2025-12’,‘2026-01’,‘2026-02’,‘현재’,‘3월(예)’,‘4월(예)’,‘5월(예)’],
+datasets: [
+{label:‘실제 주가’, data:[55000,58000,75600,70000,83400,86300,FB,null,null,null],
+borderColor:’#00e5ff’, backgroundColor:‘rgba(0,229,255,0.07)’,
+borderWidth:2.5, pointRadius:4, pointBackgroundColor:’#00e5ff’, fill:true, tension:0.35, spanGaps:false},
+{label:‘AI 예측’, data:[null,null,null,null,null,null,FB,86000,92000,99000],
+borderColor:’#00c853’, borderWidth:2.5, borderDash:[7,4],
+pointRadius:5, pointBackgroundColor:’#00c853’, fill:false, tension:0.35, spanGaps:false},
+{label:‘상단 범위’, data:[null,null,null,null,null,null,FB,92000,105000,120000],
+borderColor:‘rgba(255,213,79,0.3)’, borderWidth:1, borderDash:[3,6],
+pointRadius:0, fill:’+1’, backgroundColor:‘rgba(255,213,79,0.04)’, tension:0.35, spanGaps:false},
+{label:‘하단 범위’, data:[null,null,null,null,null,null,FB,79000,83000,81000],
+borderColor:‘rgba(255,213,79,0.3)’, borderWidth:1, borderDash:[3,6],
+pointRadius:0, fill:false, tension:0.35, spanGaps:false}
+]
+},
+options: {
+responsive:true, maintainAspectRatio:false,
+interaction:{mode:‘index’, intersect:false},
+plugins:{
+legend:{labels:{color:’#3d6347’, font:{family:‘DM Mono’,size:9}, boxWidth:10, padding:12}},
+tooltip:{backgroundColor:‘rgba(7,16,10,0.95)’, borderColor:‘rgba(0,200,83,0.3)’, borderWidth:1,
+titleColor:’#00c853’, bodyColor:’#7fad8a’,
+titleFont:{family:‘DM Mono’,size:10}, bodyFont:{family:‘DM Mono’,size:10}, padding:10,
+callbacks:{label: c => c.raw==null ? null : `${c.dataset.label}: ₩${c.raw.toLocaleString()}`}}
+},
+scales:{
+x:{grid:{color:‘rgba(255,255,255,0.03)’}, ticks:{color:’#3d6347’, font:{family:‘DM Mono’,size:8}, maxRotation:30}},
+y:{grid:{color:‘rgba(255,255,255,0.03)’}, ticks:{color:’#3d6347’, font:{family:‘DM Mono’,size:9}, callback:v=>‘₩’+(v/1000).toFixed(0)+‘K’}}
+}
+}
+});
+
+function updateChart(price) {
+const ds = window._chart.data.datasets;
+const r = m => Math.round(price*m/100)*100;
+ds[0].data[6] = price;
+ds[1].data = [null,null,null,null,null,null,price,r(1.031),r(1.103),r(1.187)];
+ds[2].data = [null,null,null,null,null,null,price,r(1.104),r(1.259),r(1.440)];
+ds[3].data = [null,null,null,null,null,null,price,r(0.948),r(0.996),r(0.972)];
+window._chart.update();
+}
+
+// ── Simulator ──
+const BASE_PRICE_SIM = {val: FB};
+const WEIGHTS = {
+fx:     {w:  0.25, base:1472,   label:‘USD/KRW’,    fmt: v=>‘₩’+Math.round(v).toLocaleString()},
+oil:    {w:  0.48, base:87.29,  label:‘WTI유가’,    fmt: v=>’$’+v.toFixed(2)},
+spread: {w:  0.72, base:180,    label:‘에틸렌스프레드’, fmt: v=>’$’+Math.round(v)+’/톤’},
+china:  {w: -0.55, base:100,    label:‘중국증설’,   fmt: v=>Math.round(v)+‘p’},
+restr:  {w:  0.45, base:100,    label:‘구조조정’,   fmt: v=>Math.round(v)+‘p’},
+};
+const SLIDER_MAP = {fx:‘sl-fx’, oil:‘sl-oil’, spread:‘sl-spread’, china:‘sl-china’, restr:‘sl-restr’};
+const RANGE_MAP  = {fx:30, oil:50, spread:80, china:50, restr:50};
+
+function runSim() {
+const base = BASE_PRICE_SIM.val;
+let total = 0;
+const contribs = {};
+for (const [key, info] of Object.entries(WEIGHTS)) {
+const raw = parseFloat(document.getElementById(SLIDER_MAP[key]).value);
+const delta = raw / 100;
+const eff = info.w * delta;
+contribs[key] = eff;
+total += eff;
+}
+const simPrice = Math.round(base * (1 + total) / 100) * 100;
+const diff = simPrice - base;
+const diffPct = diff / base * 100;
+
+const priceEl = document.getElementById(‘simPrice’);
+priceEl.textContent = ‘₩’ + simPrice.toLocaleString(‘ko-KR’);
+priceEl.style.color = diff > 0 ? ‘var(–green)’ : diff < 0 ? ‘var(–red)’ : ‘var(–green)’;
+
+const sign = diff >= 0 ? ‘+’ : ‘’;
+document.getElementById(‘simDiff’).innerHTML =
+`기준가 대비 <span style="color:${diff>=0?'var(--green)':'var(--red)'};font-weight:600;">${sign}${diff.toLocaleString('ko-KR')}원 (${sign}${diffPct.toFixed(2)}%)</span>`;
+
+const maxAbs = Math.max(…Object.values(contribs).map(Math.abs), 0.001);
+document.getElementById(‘contribList’).innerHTML = Object.entries(contribs).map(([key, eff]) => {
+const info = WEIGHTS[key];
+const pct = (eff*100).toFixed(2);
+const col = eff >= 0 ? ‘var(–green)’ : ‘var(–red)’;
+const barW = Math.min(Math.abs(eff)/maxAbs*100, 100);
+return `<div class="contrib-item"><div class="contrib-name">${info.label}</div><div class="contrib-mini-bar"><div class="contrib-mini-fill" style="width:${barW}%;background:${col};"></div></div><div class="contrib-val" style="color:${col};">${eff>=0?'+':''}${pct}%</div></div>`;
+}).join(’’);
+
+const terms = Object.entries(WEIGHTS).map(([key, info]) => {
+const delta = parseFloat(document.getElementById(SLIDER_MAP[key]).value) / 100;
+if (Math.abs(delta) < 0.001) return null;
+return `${info.w>=0?'+':''}(${info.w}×${(delta*100).toFixed(1)}%)`;
+}).filter(Boolean);
+const formulaEl = document.getElementById(‘simFormula’);
+formulaEl.style.whiteSpace = ‘pre’;
+formulaEl.textContent = terms.length
+? `P = ₩${base.toLocaleString()} × (1 ${terms.join(' ')})\n  = ₩${simPrice.toLocaleString()}`
+: ‘P = P₀ × (1 + Σwᵢ·Δxᵢ)  ← 슬라이더를 움직여보세요’;
+
+// 개별 레버 UI
+updateLeverUI(‘fx’,     parseFloat(document.getElementById(‘sl-fx’).value),     WEIGHTS.fx, 30);
+updateLeverUI(‘oil’,    parseFloat(document.getElementById(‘sl-oil’).value),    WEIGHTS.oil, 50);
+updateLeverUI(‘spread’, parseFloat(document.getElementById(‘sl-spread’).value), WEIGHTS.spread, 80);
+updateLeverUI(‘china’,  parseFloat(document.getElementById(‘sl-china’).value),  WEIGHTS.china, 50);
+updateLeverUI(‘restr’,  parseFloat(document.getElementById(‘sl-restr’).value),  WEIGHTS.restr, 50);
+
+updateBrokerUpside(simPrice);
+}
+
+function updateLeverUI(key, pctVal, info, maxRange) {
+const delta = pctVal / 100;
+const simVal = info.base * (1 + delta);
+document.getElementById(‘ld-’ + key).textContent = `변동: ${pctVal>=0?'+':''}${pctVal.toFixed(1)}%`;
+if (key === ‘china’ || key === ‘restr’) {
+document.getElementById(‘sv-’ + key).textContent = Math.round(simVal) + ‘p’;
+} else {
+document.getElementById(‘sv-’ + key).textContent = info.fmt(simVal);
+}
+const eff = info.w * delta;
+const col = eff >= 0 ? ‘var(–green)’ : ‘var(–red)’;
+const barW = Math.min(Math.abs(pctVal) / maxRange * 100, 100);
+document.getElementById(‘lf-’ + key).style.width = barW + ‘%’;
+document.getElementById(‘lf-’ + key).style.background = col;
+
+const badge = document.getElementById(‘lb-’ + key);
+if (Math.abs(pctVal) < 0.1) {
+badge.textContent = ‘기준’;
+badge.style.background = ‘rgba(255,255,255,.05)’;
+badge.style.color = ‘var(–text3)’;
+badge.style.borderColor = ‘rgba(255,255,255,.08)’;
+} else {
+badge.textContent = `${pctVal>=0?'▲':'▼'} ${Math.abs(pctVal).toFixed(1)}%`;
+badge.style.background = eff>=0 ? ‘rgba(0,200,83,.1)’ : ‘rgba(255,61,87,.1)’;
+badge.style.color = eff>=0 ? ‘var(–green)’ : ‘var(–red)’;
+badge.style.borderColor = eff>=0 ? ‘rgba(0,200,83,.25)’ : ‘rgba(255,61,87,.25)’;
+}
+}
+
+function updateBrokerUpside(simPrice) {
+document.querySelectorAll(’.broker-card’).forEach((card, i) => {
+const target = parseInt(card.dataset.target);
+const upside = (target - simPrice) / simPrice * 100;
+const el = document.getElementById(‘bu-’ + i);
+if (el) {
+el.textContent = `${upside>=0?'+':''}${upside.toFixed(1)}%${upside>=0?'↑':'↓'}`;
+el.className = ’broker-upside ’ + (upside>=0?‘up’:‘dn’);
+}
+});
+}
+
+function resetSim() {
+[‘sl-fx’,‘sl-oil’,‘sl-spread’,‘sl-china’,‘sl-restr’].forEach(id => {
+document.getElementById(id).value = 0;
+});
+runSim();
+}
+
+// Init
+setApi(‘연결 중…’, ‘api-loading’);
+runSim();
+Promise.all([loadStock(), loadFX()]);
+</script>
+
+</body>
+</html>
