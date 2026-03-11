@@ -10,7 +10,26 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>롯데케미칼 AI 주가 예측 — 정임두</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// Chart.js 안정 로더 - 여러 CDN 순차 시도
+(function(){
+  var cdns = [
+    "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js",
+    "https://unpkg.com/chart.js@4.4.1/dist/chart.umd.min.js"
+  ];
+  var idx = 0;
+  function load(){
+    if(idx >= cdns.length) return;
+    var s = document.createElement('script');
+    s.src = cdns[idx++];
+    s.onload = function(){ window._chartJsReady = true; if(window._onChartReady) window._onChartReady(); };
+    s.onerror = load;
+    document.head.appendChild(s);
+  }
+  load();
+})();
+</script>
 <style>
 :root {
   --bg:    #f4f8f5;
@@ -577,7 +596,7 @@ white-space:nowrap;flex-shrink:0;letter-spacing:.1em;
           </div>
           <div class="lever-track">
             <span class="lever-bound">-30%</span>
-            <input type="range" class="lever-slider" id="sl-fx" min="-30" max="30" value="0" step="0.5" oninput="runSim()"/>
+            <input type="range" class="lever-slider" id="sl-fx" min="-30" max="30" value="0" step="0.5"/>
             <span class="lever-bound">+30%</span>
           </div>
           <div class="lever-vals">
@@ -595,7 +614,7 @@ white-space:nowrap;flex-shrink:0;letter-spacing:.1em;
           </div>
           <div class="lever-track">
             <span class="lever-bound">-50%</span>
-            <input type="range" class="lever-slider" id="sl-oil" min="-50" max="50" value="0" step="1" oninput="runSim()"/>
+            <input type="range" class="lever-slider" id="sl-oil" min="-50" max="50" value="0" step="1"/>
             <span class="lever-bound">+50%</span>
           </div>
           <div class="lever-vals">
@@ -613,7 +632,7 @@ white-space:nowrap;flex-shrink:0;letter-spacing:.1em;
           </div>
           <div class="lever-track">
             <span class="lever-bound">-60%</span>
-            <input type="range" class="lever-slider" id="sl-spread" min="-60" max="100" value="0" step="5" oninput="runSim()"/>
+            <input type="range" class="lever-slider" id="sl-spread" min="-60" max="100" value="0" step="5"/>
             <span class="lever-bound">+100%</span>
           </div>
           <div class="lever-vals">
@@ -631,7 +650,7 @@ white-space:nowrap;flex-shrink:0;letter-spacing:.1em;
           </div>
           <div class="lever-track">
             <span class="lever-bound">-50%</span>
-            <input type="range" class="lever-slider" id="sl-china" min="-50" max="30" value="0" step="5" oninput="runSim()"/>
+            <input type="range" class="lever-slider" id="sl-china" min="-50" max="30" value="0" step="5"/>
             <span class="lever-bound">+30%</span>
           </div>
           <div class="lever-vals">
@@ -649,7 +668,7 @@ white-space:nowrap;flex-shrink:0;letter-spacing:.1em;
           </div>
           <div class="lever-track">
             <span class="lever-bound">-30%</span>
-            <input type="range" class="lever-slider" id="sl-restr" min="-30" max="50" value="0" step="5" oninput="runSim()"/>
+            <input type="range" class="lever-slider" id="sl-restr" min="-30" max="50" value="0" step="5"/>
             <span class="lever-bound">+50%</span>
           </div>
           <div class="lever-vals">
@@ -879,45 +898,10 @@ document.getElementById(‘pred2c’).textContent = `▲+${pct(p2)}%`;
 document.getElementById(‘pred3c’).textContent = `▲+${pct(p3)}%`;
 }
 
-// Chart
-const chartCtx = document.getElementById(‘priceChart’).getContext(‘2d’);
-window._chart = new Chart(chartCtx, {
-type: ‘line’,
-data: {
-labels: [‘2025-09’,‘2025-10’,‘2025-11’,‘2025-12’,‘2026-01’,‘2026-02’,‘현재’,‘3월(예)’,‘4월(예)’,‘5월(예)’],
-datasets: [
-{label:‘실제 주가’, data:[55000,58000,75600,70000,83400,86300,FB,null,null,null],
-borderColor:’#00e5ff’, backgroundColor:‘rgba(0,229,255,0.07)’,
-borderWidth:2.5, pointRadius:4, pointBackgroundColor:’#00e5ff’, fill:true, tension:0.35, spanGaps:false},
-{label:‘AI 예측’, data:[null,null,null,null,null,null,FB,86000,92000,99000],
-borderColor:’#00c853’, borderWidth:2.5, borderDash:[7,4],
-pointRadius:5, pointBackgroundColor:’#00c853’, fill:false, tension:0.35, spanGaps:false},
-{label:‘상단 범위’, data:[null,null,null,null,null,null,FB,92000,105000,120000],
-borderColor:‘rgba(255,213,79,0.3)’, borderWidth:1, borderDash:[3,6],
-pointRadius:0, fill:’+1’, backgroundColor:‘rgba(255,213,79,0.04)’, tension:0.35, spanGaps:false},
-{label:‘하단 범위’, data:[null,null,null,null,null,null,FB,79000,83000,81000],
-borderColor:‘rgba(255,213,79,0.3)’, borderWidth:1, borderDash:[3,6],
-pointRadius:0, fill:false, tension:0.35, spanGaps:false}
-]
-},
-options: {
-responsive:true, maintainAspectRatio:false,
-interaction:{mode:‘index’, intersect:false},
-plugins:{
-legend:{labels:{color:’#3d6347’, font:{family:‘DM Mono’,size:9}, boxWidth:10, padding:12}},
-tooltip:{backgroundColor:‘rgba(7,16,10,0.95)’, borderColor:‘rgba(0,200,83,0.3)’, borderWidth:1,
-titleColor:’#00c853’, bodyColor:’#7fad8a’,
-titleFont:{family:‘DM Mono’,size:10}, bodyFont:{family:‘DM Mono’,size:10}, padding:10,
-callbacks:{label: c => c.raw==null ? null : `${c.dataset.label}: ₩${c.raw.toLocaleString()}`}}
-},
-scales:{
-x:{grid:{color:‘rgba(255,255,255,0.03)’}, ticks:{color:’#3d6347’, font:{family:‘DM Mono’,size:8}, maxRotation:30}},
-y:{grid:{color:‘rgba(255,255,255,0.03)’}, ticks:{color:’#3d6347’, font:{family:‘DM Mono’,size:9}, callback:v=>‘₩’+(v/1000).toFixed(0)+‘K’}}
-}
-}
-});
+/* chart init moved to initChartWhenReady() */
 
 function updateChart(price) {
+if(!window._chart) return;
 const ds = window._chart.data.datasets;
 const r = m => Math.round(price*m/100)*100;
 ds[0].data[6] = price;
@@ -1040,9 +1024,69 @@ document.getElementById(id).value = 0;
 runSim();
 }
 
+// ── 슬라이더 이벤트 바인딩 (inline oninput 대신 안전한 방식) ──
+[‘sl-fx’,‘sl-oil’,‘sl-spread’,‘sl-china’,‘sl-restr’].forEach(function(id){
+var el = document.getElementById(id);
+if(el){
+el.addEventListener(‘input’, runSim);
+el.addEventListener(‘change’, runSim);
+}
+});
+
+// ── Chart.js 준비 후 차트 초기화 ──
+function initChartWhenReady(){
+if(typeof Chart === ‘undefined’){
+window._onChartReady = initChartWhenReady;
+return;
+}
+// Chart.js 준비됨 - 차트 그리기
+var chartCtx = document.getElementById(‘priceChart’);
+if(!chartCtx){ return; }
+if(window._chart){ window._chart.destroy(); }
+window._chart = new Chart(chartCtx.getContext(‘2d’), {
+type: ‘line’,
+data: {
+labels: [‘2025-09’,‘2025-10’,‘2025-11’,‘2025-12’,‘2026-01’,‘2026-02’,‘현재’,‘3월(예)’,‘4월(예)’,‘5월(예)’],
+datasets: [
+{label:‘실제 주가’, data:[55000,58000,75600,70000,83400,86300,BASE_PRICE_SIM.val,null,null,null],
+borderColor:’#0077b6’, backgroundColor:‘rgba(0,119,182,0.07)’,
+borderWidth:2.5, pointRadius:4, pointBackgroundColor:’#0077b6’, fill:true, tension:0.35, spanGaps:false},
+{label:‘AI 예측’, data:[null,null,null,null,null,null,BASE_PRICE_SIM.val,86000,92000,99000],
+borderColor:’#1a8a3c’, borderWidth:2.5, borderDash:[7,4],
+pointRadius:5, pointBackgroundColor:’#1a8a3c’, fill:false, tension:0.35, spanGaps:false},
+{label:‘상단 범위’, data:[null,null,null,null,null,null,BASE_PRICE_SIM.val,92000,105000,120000],
+borderColor:‘rgba(184,134,11,0.4)’, borderWidth:1, borderDash:[3,6],
+pointRadius:0, fill:’+1’, backgroundColor:‘rgba(184,134,11,0.05)’, tension:0.35, spanGaps:false},
+{label:‘하단 범위’, data:[null,null,null,null,null,null,BASE_PRICE_SIM.val,79000,83000,81000],
+borderColor:‘rgba(184,134,11,0.4)’, borderWidth:1, borderDash:[3,6],
+pointRadius:0, fill:false, tension:0.35, spanGaps:false}
+]
+},
+options: {
+responsive:true, maintainAspectRatio:false,
+interaction:{mode:‘index’, intersect:false},
+plugins:{
+legend:{labels:{color:’#3a6b47’, font:{family:‘DM Mono,monospace’,size:9}, boxWidth:10, padding:12}},
+tooltip:{backgroundColor:‘rgba(26,46,32,0.95)’, borderColor:‘rgba(26,138,60,0.3)’, borderWidth:1,
+titleColor:’#1a8a3c’, bodyColor:’#3a6b47’,
+titleFont:{family:‘DM Mono,monospace’,size:10}, bodyFont:{family:‘DM Mono,monospace’,size:10}, padding:10,
+callbacks:{label: function(c){ return c.raw==null ? null : c.dataset.label+’: ₩’+c.raw.toLocaleString(); }}}
+},
+scales:{
+x:{grid:{color:‘rgba(26,138,60,0.06)’}, ticks:{color:’#7aaa88’, font:{family:‘DM Mono,monospace’,size:8}, maxRotation:30}},
+y:{grid:{color:‘rgba(26,138,60,0.06)’}, ticks:{color:’#7aaa88’, font:{family:‘DM Mono,monospace’,size:9}, callback:function(v){return ‘₩’+(v/1000).toFixed(0)+‘K’;}}}
+}
+}
+});
+}
+
+// ── 기존 Chart 생성 코드 비활성화용 플래그 ──
+window._chartInitDone = false;
+
 // Init
 setApi(‘연결 중…’, ‘api-loading’);
 runSim();
+initChartWhenReady();
 Promise.all([loadStock(), loadFX()]);
 </script>
 
